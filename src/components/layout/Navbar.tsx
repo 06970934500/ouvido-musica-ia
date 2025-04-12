@@ -1,7 +1,8 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Music, LogIn } from "lucide-react";
+import { Music } from "lucide-react";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 const Navbar = () => {
   const location = useLocation();
@@ -66,10 +67,7 @@ const Navbar = () => {
           >
             Planos
           </Link>
-          <Button variant="outline" size="sm" className="hidden md:flex gap-1">
-            <LogIn className="h-4 w-4 mr-1" />
-            Entrar
-          </Button>
+          <UserMenu />
         </nav>
       </div>
     </header>
