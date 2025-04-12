@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -60,15 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      if (!isSupabaseConfigured) {
-        toast({
-          title: "Erro de configuração",
-          description: "O Supabase não está configurado corretamente. Verifique as variáveis de ambiente.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
