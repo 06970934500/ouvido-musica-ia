@@ -12,6 +12,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  isSupabaseConfigured: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,30 +21,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    try {
+      // Get initial session
+      supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
-      }
-    );
+      }).catch(error => {
+        console.error('Erro ao obter sessão:', error);
+        setIsSupabaseConfigured(false);
+        setIsLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
+      );
+
+      return () => {
+        if (subscription && typeof subscription.unsubscribe === 'function') {
+          subscription.unsubscribe();
+        }
+      };
+    } catch (error) {
+      console.error('Erro ao configurar autenticação:', error);
+      setIsSupabaseConfigured(false);
+      setIsLoading(false);
+    }
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
+      if (!isSupabaseConfigured) {
+        toast({
+          title: "Erro de configuração",
+          description: "O Supabase não está configurado corretamente. Verifique as variáveis de ambiente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
@@ -70,6 +95,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string) => {
     try {
+      if (!isSupabaseConfigured) {
+        toast({
+          title: "Erro de configuração",
+          description: "O Supabase não está configurado corretamente. Verifique as variáveis de ambiente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsLoading(true);
       const { error } = await supabase.auth.signUp({ email, password });
       
@@ -96,6 +130,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        toast({
+          title: "Erro de configuração",
+          description: "O Supabase não está configurado corretamente. Verifique as variáveis de ambiente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       
@@ -122,6 +165,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
+      if (!isSupabaseConfigured) {
+        toast({
+          title: "Erro de configuração",
+          description: "O Supabase não está configurado corretamente. Verifique as variáveis de ambiente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setIsLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -156,7 +208,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signIn,
       signUp,
       signOut,
-      resetPassword
+      resetPassword,
+      isSupabaseConfigured
     }}>
       {children}
     </AuthContext.Provider>

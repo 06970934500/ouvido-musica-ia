@@ -11,12 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { LogIn, User, Settings, LogOut } from "lucide-react";
+import { LogIn, User, Settings, LogOut, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AuthDialog } from "./AuthDialog";
+import { toast } from "@/hooks/use-toast";
 
 export const UserMenu = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isSupabaseConfigured } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   const handleSignOut = async () => {
@@ -26,6 +27,27 @@ export const UserMenu = () => {
       console.error("Erro ao fazer logout", error);
     }
   };
+
+  // Se o Supabase não estiver configurado, mostrar aviso
+  if (!isSupabaseConfigured) {
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="flex gap-1 text-amber-500 border-amber-500"
+        onClick={() => {
+          toast({
+            title: "Configuração do Supabase incompleta",
+            description: "As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY precisam ser configuradas.",
+            variant: "destructive",
+          });
+        }}
+      >
+        <AlertTriangle className="h-4 w-4 mr-1" />
+        Supabase não configurado
+      </Button>
+    );
+  }
 
   // Se o usuário não estiver logado, mostra o botão de login
   if (!user) {

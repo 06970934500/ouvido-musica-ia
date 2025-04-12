@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, UserPlus, Lock } from "lucide-react";
+import { LogIn, UserPlus, AlertTriangle } from "lucide-react";
 
 type AuthDialogProps = {
   trigger?: React.ReactNode;
@@ -30,7 +30,7 @@ export const AuthDialog = ({
   const [password, setPassword] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
-  const { signIn, signUp, resetPassword, isLoading } = useAuth();
+  const { signIn, signUp, resetPassword, isLoading, isSupabaseConfigured } = useAuth();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +69,25 @@ export const AuthDialog = ({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
       <DialogContent className="sm:max-w-[425px]">
-        {isResetPassword ? (
+        {!isSupabaseConfigured ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center text-amber-500">
+                <AlertTriangle className="mr-2 h-5 w-5" />
+                Configuração incompleta
+              </DialogTitle>
+              <DialogDescription>
+                O Supabase não está configurado corretamente. As variáveis de ambiente VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY precisam ser configuradas.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <p className="text-sm">
+                Verifique se você configurou corretamente a integração com o Supabase no projeto Lovable e se as variáveis de ambiente estão definidas.
+              </p>
+              <Button onClick={() => setIsOpen(false)}>Fechar</Button>
+            </div>
+          </>
+        ) : isResetPassword ? (
           <>
             <DialogHeader>
               <DialogTitle>Redefinir senha</DialogTitle>
