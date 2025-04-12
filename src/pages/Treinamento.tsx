@@ -1,14 +1,36 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Music, VolumeX, Volume2, Check, X } from "lucide-react";
-import ExerciseCard from "@/components/training/ExerciseCard";
+import TrainingModule from "@/components/training/TrainingModule";
+import Exercise from "@/components/training/Exercise";
 
 const Treinamento = () => {
   const [activeTab, setActiveTab] = useState("intervalos");
+
+  // Dados para os exercícios
+  const intervalosBasicos = [
+    "Uníssono", "2ª maior", "3ª maior", "4ª justa", "5ª justa", "8ª (oitava)"
+  ];
+  
+  const intervalosIntermediarios = [
+    "2ª menor", "3ª menor", "6ª maior", "7ª maior", "6ª menor", "7ª menor"
+  ];
+  
+  const triadesBasicas = [
+    "Maior", "Menor", "Diminuto", "Aumentado"
+  ];
+  
+  const tetrades = [
+    "Maior com 7ª", "Dominante (7)", "Menor com 7ª", "Meio-diminuto"
+  ];
+  
+  const progressoesBasicas = [
+    "I - IV - V", "I - vi - IV - V", "I - V - vi - IV", "ii - V - I"
+  ];
+  
+  const progressoesJazz = [
+    "ii - V - I", "I - vi - ii - V", "iii - vi - ii - V", "I - IV - iii - vi - ii - V - I"
+  ];
 
   return (
     <div className="container py-12">
@@ -30,187 +52,85 @@ const Treinamento = () => {
 
         <TabsContent value="intervalos" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Básico</CardTitle>
-                <CardDescription>Intervalos mais simples e comuns</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Uníssono, 2ª maior, 3ª maior</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>4ª justa, 5ª justa</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>8ª (oitava)</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Básico"
+              description="Intervalos mais simples e comuns"
+              items={intervalosBasicos}
+              exerciseType="intervalos"
+              difficulty="iniciante"
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Intermediário</CardTitle>
-                <CardDescription>Intervalos mais desafiadores</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>2ª menor, 3ª menor</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>6ª maior, 7ª maior</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Identificação do intervalo e direção (ascendente/descendente)</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" variant="outline">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Intermediário"
+              description="Intervalos mais desafiadores"
+              items={intervalosIntermediarios}
+              exerciseType="intervalos"
+              difficulty="intermediario"
+            />
           </div>
 
-          <ExerciseCard 
-            title="Exercício de Exemplo" 
+          <Exercise 
+            title="Exemplo de Exercício de Intervalos"
             description="Escute o intervalo e selecione a resposta correta"
             options={["2ª Menor", "2ª Maior", "3ª Menor", "3ª Maior"]}
+            exerciseType="intervalos"
+            difficulty="iniciante"
           />
         </TabsContent>
 
         <TabsContent value="acordes" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tríades Básicas</CardTitle>
-                <CardDescription>Acordes de três notas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Maior</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Menor</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Diminuto</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Tríades Básicas"
+              description="Acordes de três notas"
+              items={triadesBasicas}
+              exerciseType="acordes"
+              difficulty="iniciante"
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Tétrades</CardTitle>
-                <CardDescription>Acordes de quatro notas</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Maior com 7ª</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Dominante (7)</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Menor com 7ª</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" variant="outline">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Tétrades"
+              description="Acordes de quatro notas"
+              items={tetrades}
+              exerciseType="acordes"
+              difficulty="intermediario"
+            />
           </div>
 
-          <ExerciseCard 
-            title="Exercício de Exemplo" 
+          <Exercise 
+            title="Exemplo de Exercício de Acordes"
             description="Escute o acorde e selecione a resposta correta"
             options={["Maior", "Menor", "Aumentado", "Diminuto"]}
+            exerciseType="acordes"
+            difficulty="iniciante"
           />
         </TabsContent>
 
         <TabsContent value="progressoes" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Progressões Básicas</CardTitle>
-                <CardDescription>Sequências comuns em músicas populares</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>I - IV - V</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>I - vi - IV - V</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>I - V - vi - IV</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Progressões Básicas"
+              description="Sequências comuns em músicas populares"
+              items={progressoesBasicas}
+              exerciseType="progressoes"
+              difficulty="iniciante"
+            />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Progressões Jazz</CardTitle>
-                <CardDescription>Sequências comuns no jazz e música sofisticada</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>ii - V - I</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>I - vi - ii - V</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>iii - vi - ii - V</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full" variant="outline">Iniciar Treino</Button>
-              </CardFooter>
-            </Card>
+            <TrainingModule
+              title="Progressões Jazz"
+              description="Sequências comuns no jazz e música sofisticada"
+              items={progressoesJazz}
+              exerciseType="progressoes"
+              difficulty="avancado"
+            />
           </div>
 
-          <ExerciseCard 
-            title="Exercício de Exemplo" 
+          <Exercise 
+            title="Exemplo de Exercício de Progressões"
             description="Escute a progressão e selecione a resposta correta"
             options={["I-IV-V", "I-V-vi-IV", "ii-V-I", "I-vi-IV-V"]}
+            exerciseType="progressoes"
+            difficulty="iniciante"
           />
         </TabsContent>
       </Tabs>

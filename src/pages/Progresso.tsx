@@ -1,13 +1,37 @@
 
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Award, Music, ScrollText, TrendingUp } from "lucide-react";
+import { 
+  getWeeklyProgress, 
+  getProgressByCategory, 
+  getUserStats 
+} from "@/services/progressoService";
+import { ExerciseAnalytics, WeeklyProgress } from "@/types/progresso";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
 
 const Progresso = () => {
-  // Demo data
-  const weeklyData = [
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [weeklyData, setWeeklyData] = useState<WeeklyProgress[]>([]);
+  const [progressByCategory, setProgressByCategory] = useState<ExerciseAnalytics[]>([]);
+  const [userStats, setUserStats] = useState({
+    accuracyRate: 0,
+    streakDays: 0,
+    totalExercises: 0,
+    analyzedSongs: 0,
+    level: 1
+  });
+
+  // Demo data para usuários não logados ou quando não há dados
+  const demoWeeklyData = [
     { day: "Dom", acertos: 65, exercicios: 100 },
     { day: "Seg", acertos: 72, exercicios: 100 },
     { day: "Ter", acertos: 80, exercicios: 100 },
@@ -17,7 +41,7 @@ const Progresso = () => {
     { day: "Sáb", acertos: 93, exercicios: 100 },
   ];
 
-  const progressByCategory = [
+  const demoProgressByCategory = [
     { categoria: "Intervalos", iniciante: 90, intermediario: 70, avancado: 50 },
     { categoria: "Acordes", iniciante: 85, intermediario: 65, avancado: 40 },
     { categoria: "Progressões", iniciante: 75, intermediario: 50, avancado: 25 },
@@ -38,15 +62,95 @@ const Progresso = () => {
     { name: "Mestre do Ouvido", progress: 0, max: 100 },
   ];
 
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) {
+        // Usar dados de demonstração para usuários não logados
+        setWeeklyData(demoWeeklyData);
+        setProgressByCategory(demoProgressByCategory);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Carregar dados reais para usuários logados
+        const [weeklyData, categoryData, stats] = await Promise.all([
+          getWeeklyProgress(user.id),
+          getProgressByCategory(user.id),
+          getUserStats(user.id)
+        ]);
+
+        // Se não houver dados, usar os dados de demonstração
+        setWeeklyData(weeklyData.length > 0 ? weeklyData : demoWeeklyData);
+        setProgressByCategory(categoryData.length > 0 ? categoryData : demoProgressByCategory);
+        setUserStats(stats);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Ocorreu um erro ao carregar seus dados de progresso.",
+          variant: "destructive",
+        });
+        
+        // Usar dados de demonstração em caso de erro
+        setWeeklyData(demoWeeklyData);
+        setProgressByCategory(demoProgressByCategory);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, toast]);
+
   const formatPercent = (value: number) => `${value}%`;
+
+  // Componente de carregamento
+  if (loading) {
+    return (
+      <div className="container py-12">
+        <div className="flex flex-col items-center space-y-4 text-center mb-8">
+          <h1 className="text-3xl font-bold">Seu Progresso</h1>
+          <p className="text-muted-foreground max-w-2xl">
+            Carregando seus dados...
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map(i => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-24 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <Skeleton className="h-80 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-12">
       <div className="flex flex-col items-center space-y-4 text-center mb-8">
         <h1 className="text-3xl font-bold">Seu Progresso</h1>
         <p className="text-muted-foreground max-w-2xl">
-          Acompanhe sua evolução e visualize seus resultados de treinamento
+          {user ? "Acompanhe sua evolução e visualize seus resultados de treinamento" : 
+                 "Faça login para salvar seu progresso e acompanhar sua evolução"}
         </p>
+        
+        {!user && (
+          <Button variant="default" className="mt-2" onClick={() => window.location.reload()}>
+            Entrar para salvar progresso
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -55,7 +159,7 @@ const Progresso = () => {
             <div className="p-3 rounded-full bg-music-100 mb-4">
               <ScrollText className="h-6 w-6 text-music-600" />
             </div>
-            <div className="text-3xl font-bold">84%</div>
+            <div className="text-3xl font-bold">{userStats.accuracyRate}%</div>
             <p className="text-muted-foreground">Taxa de Acerto</p>
           </CardContent>
         </Card>
@@ -65,7 +169,7 @@ const Progresso = () => {
             <div className="p-3 rounded-full bg-music-100 mb-4">
               <Music className="h-6 w-6 text-music-600" />
             </div>
-            <div className="text-3xl font-bold">7</div>
+            <div className="text-3xl font-bold">{userStats.analyzedSongs}</div>
             <p className="text-muted-foreground">Músicas Analisadas</p>
           </CardContent>
         </Card>
@@ -75,7 +179,7 @@ const Progresso = () => {
             <div className="p-3 rounded-full bg-music-100 mb-4">
               <TrendingUp className="h-6 w-6 text-music-600" />
             </div>
-            <div className="text-3xl font-bold">23</div>
+            <div className="text-3xl font-bold">{userStats.streakDays}</div>
             <p className="text-muted-foreground">Dias Consecutivos</p>
           </CardContent>
         </Card>
@@ -85,7 +189,7 @@ const Progresso = () => {
             <div className="p-3 rounded-full bg-music-100 mb-4">
               <Award className="h-6 w-6 text-music-600" />
             </div>
-            <div className="text-3xl font-bold">Nível 3</div>
+            <div className="text-3xl font-bold">Nível {userStats.level}</div>
             <p className="text-muted-foreground">Ranking Atual</p>
           </CardContent>
         </Card>
@@ -162,44 +266,55 @@ const Progresso = () => {
               <CardDescription>Últimas músicas analisadas</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Música</th>
-                      <th className="text-left p-2">Artista</th>
-                      <th className="text-left p-2">Data</th>
-                      <th className="text-left p-2">Avaliação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentSongs.map((song) => (
-                      <tr key={song.id} className="border-b">
-                        <td className="p-2 font-medium">{song.title}</td>
-                        <td className="p-2 text-muted-foreground">{song.artist}</td>
-                        <td className="p-2 text-muted-foreground">{song.date}</td>
-                        <td className="p-2">
-                          <div className="flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <span 
-                                key={i} 
-                                className={`h-4 w-4 rounded-full mr-0.5 ${
-                                  i < song.rating ? "bg-music-500" : "bg-muted"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        </td>
+              {user ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">Música</th>
+                        <th className="text-left p-2">Artista</th>
+                        <th className="text-left p-2">Data</th>
+                        <th className="text-left p-2">Avaliação</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {recentSongs.map((song) => (
+                        <tr key={song.id} className="border-b">
+                          <td className="p-2 font-medium">{song.title}</td>
+                          <td className="p-2 text-muted-foreground">{song.artist}</td>
+                          <td className="p-2 text-muted-foreground">{song.date}</td>
+                          <td className="p-2">
+                            <div className="flex">
+                              {Array.from({ length: 5 }).map((_, i) => (
+                                <span 
+                                  key={i} 
+                                  className={`h-4 w-4 rounded-full mr-0.5 ${
+                                    i < song.rating ? "bg-music-500" : "bg-muted"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">Faça login para ver suas músicas analisadas</p>
+                  <Button variant="default" onClick={() => window.location.reload()}>
+                    Entrar agora
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <div className="text-center">
-            <Button variant="outline">Ver Todas as Músicas</Button>
+            <Button variant="outline" asChild>
+              <Link to="/analise">Analisar Nova Música</Link>
+            </Button>
           </div>
         </TabsContent>
         
@@ -242,7 +357,11 @@ const Progresso = () => {
                   </div>
                   <div>
                     <p className="font-medium">Complete o treinamento de acordes intermediários</p>
-                    <p className="text-sm text-muted-foreground">Melhore sua habilidade de reconhecer acordes mais complexos</p>
+                    <p className="text-sm text-muted-foreground">
+                      <Link to="/treinamento" className="text-music-600 hover:underline">
+                        Melhore sua habilidade de reconhecer acordes mais complexos
+                      </Link>
+                    </p>
                   </div>
                 </li>
                 <li className="flex gap-3">
@@ -251,7 +370,11 @@ const Progresso = () => {
                   </div>
                   <div>
                     <p className="font-medium">Analise mais 3 músicas</p>
-                    <p className="text-sm text-muted-foreground">Pratique a identificação de acordes em músicas reais</p>
+                    <p className="text-sm text-muted-foreground">
+                      <Link to="/analise" className="text-music-600 hover:underline">
+                        Pratique a identificação de acordes em músicas reais
+                      </Link>
+                    </p>
                   </div>
                 </li>
                 <li className="flex gap-3">
@@ -260,7 +383,11 @@ const Progresso = () => {
                   </div>
                   <div>
                     <p className="font-medium">Comece o treinamento de progressões avançadas</p>
-                    <p className="text-sm text-muted-foreground">Desafie-se com sequências de acordes mais complexas</p>
+                    <p className="text-sm text-muted-foreground">
+                      <Link to="/treinamento" className="text-music-600 hover:underline">
+                        Desafie-se com sequências de acordes mais complexas
+                      </Link>
+                    </p>
                   </div>
                 </li>
               </ul>
