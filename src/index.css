@@ -83,7 +83,7 @@
   }
 
   .hero-gradient {
-    @apply bg-gradient-to-br from-music-100 via-music-50 to-background;
+    @apply bg-gradient-to-br from-music-100 via-music-50 to-background dark:from-music-900 dark:via-music-950 dark:to-background;
   }
 
   .card-hover {

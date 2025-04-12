@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Music } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const location = useLocation();
@@ -67,6 +68,7 @@ const Navbar = () => {
           >
             Planos
           </Link>
+          <ThemeToggle />
           <UserMenu />
         </nav>
       </div>
