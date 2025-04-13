@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, Music, Play, Pause, SkipBack, SkipForward } from "lucide-react";
@@ -7,12 +7,59 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WaveformVisualizer from "@/components/analysis/WaveformVisualizer";
 import ChordTimeline from "@/components/analysis/ChordTimeline";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+
+// Função para obter o número de análises realizadas no mês atual
+const getMonthlyAnalysisCount = () => {
+  const analysisHistory = JSON.parse(localStorage.getItem("analysisHistory") || "[]");
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  
+  return analysisHistory.filter((analysis: any) => {
+    const analysisDate = new Date(analysis.date);
+    return analysisDate.getMonth() === currentMonth && 
+           analysisDate.getFullYear() === currentYear;
+  }).length;
+};
+
+// Função para registrar uma nova análise
+const recordAnalysis = () => {
+  const analysisHistory = JSON.parse(localStorage.getItem("analysisHistory") || "[]");
+  analysisHistory.push({
+    date: new Date().toISOString(),
+    id: Date.now().toString()
+  });
+  localStorage.setItem("analysisHistory", JSON.stringify(analysisHistory));
+};
 
 const Analise = () => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [monthlyAnalysisCount, setMonthlyAnalysisCount] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+  const MAX_FREE_ANALYSIS = 3;
+
+  const {
+    isPlaying,
+    duration,
+    play,
+    pause,
+    toggle,
+    seek,
+    audioRef
+  } = useAudioPlayer(audioUrl);
+
+  // Carregar contagem de análises ao iniciar
+  useEffect(() => {
+    setMonthlyAnalysisCount(getMonthlyAnalysisCount());
+  }, []);
 
   // Demo song data
   const demoSongData = {
@@ -34,6 +81,29 @@ const Analise = () => {
   };
 
   const handleFileUpload = (file: File) => {
+    // Verificar se o usuário pode fazer mais análises
+    const isPremium = user?.id && false; // Aqui você verificaria o plano do usuário (por enquanto, todos são free)
+    
+    if (!isPremium && monthlyAnalysisCount >= MAX_FREE_ANALYSIS) {
+      toast({
+        title: "Limite de análises atingido",
+        description: `Você já utilizou suas ${MAX_FREE_ANALYSIS} análises gratuitas este mês. Faça upgrade para o plano Premium para análises ilimitadas.`,
+        variant: "destructive",
+      });
+      navigate("/planos");
+      return;
+    }
+    
+    // Registrar nova análise e atualizar contagem
+    recordAnalysis();
+    setMonthlyAnalysisCount(getMonthlyAnalysisCount());
+    
+    // Criar URL para o arquivo de áudio
+    if (file.type.includes('audio')) {
+      const url = URL.createObjectURL(file);
+      setAudioUrl(url);
+    }
+    
     setFile(file);
   };
 
@@ -67,17 +137,55 @@ const Analise = () => {
   };
 
   const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    toggle();
   };
 
   const handleTimeChange = (value: number[]) => {
-    setCurrentTime(value[0]);
+    const newTime = value[0];
+    setCurrentTime(newTime);
+    seek(newTime);
+  };
+
+  const handleSkipForward = () => {
+    const newTime = Math.min(currentTime + 5, demoSongData.duration);
+    setCurrentTime(newTime);
+    seek(newTime);
+  };
+
+  const handleSkipBackward = () => {
+    const newTime = Math.max(currentTime - 5, 0);
+    setCurrentTime(newTime);
+    seek(newTime);
   };
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
+  // Função para usar uma música de exemplo
+  const useDemoSong = () => {
+    // Verificar se o usuário pode fazer mais análises
+    const isPremium = user?.id && false; // Aqui você verificaria o plano do usuário (por enquanto, todos são free)
+    
+    if (!isPremium && monthlyAnalysisCount >= MAX_FREE_ANALYSIS) {
+      toast({
+        title: "Limite de análises atingido",
+        description: `Você já utilizou suas ${MAX_FREE_ANALYSIS} análises gratuitas este mês. Faça upgrade para o plano Premium para análises ilimitadas.`,
+        variant: "destructive",
+      });
+      navigate("/planos");
+      return;
+    }
+    
+    // Registrar nova análise e atualizar contagem
+    recordAnalysis();
+    setMonthlyAnalysisCount(getMonthlyAnalysisCount());
+    
+    // Simular um arquivo de demo
+    setFile(new File([], "demo.mp3"));
+    setAudioUrl(undefined); // Não temos áudio real para o demo
   };
 
   return (
@@ -87,6 +195,16 @@ const Analise = () => {
         <p className="text-muted-foreground max-w-2xl">
           Faça upload de uma música para receber uma análise detalhada dos acordes e estrutura
         </p>
+        {!user?.id && (
+          <p className="text-sm bg-yellow-100 text-yellow-800 p-2 rounded">
+            Faça login para salvar suas análises e acompanhar seu progresso
+          </p>
+        )}
+        {!file && user?.id && (
+          <p className="text-sm">
+            Você utilizou {monthlyAnalysisCount} de {MAX_FREE_ANALYSIS} análises gratuitas este mês
+          </p>
+        )}
       </div>
 
       {!file ? (
@@ -127,7 +245,7 @@ const Analise = () => {
             <Button 
               variant="outline" 
               className="w-full max-w-xs" 
-              onClick={() => setFile(new File([], "demo.mp3"))}
+              onClick={useDemoSong}
             >
               <Music className="mr-2 h-4 w-4" />
               Usar Exemplo de Música
@@ -177,7 +295,7 @@ const Analise = () => {
                 </div>
 
                 <div className="flex justify-center gap-2">
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={handleSkipBackward}>
                     <SkipBack className="h-4 w-4" />
                   </Button>
                   <Button size="icon" onClick={togglePlayPause}>
@@ -187,7 +305,7 @@ const Analise = () => {
                       <Play className="h-4 w-4" />
                     )}
                   </Button>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" onClick={handleSkipForward}>
                     <SkipForward className="h-4 w-4" />
                   </Button>
                 </div>
