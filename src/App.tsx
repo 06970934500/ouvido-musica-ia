@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,28 +18,30 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route path="treinamento" element={<Treinamento />} />
-                <Route path="analise" element={<Analise />} />
-                <Route path="progresso" element={<Progresso />} />
-                <Route path="planos" element={<Planos />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Home />} />
+                  <Route path="treinamento" element={<Treinamento />} />
+                  <Route path="analise" element={<Analise />} />
+                  <Route path="progresso" element={<Progresso />} />
+                  <Route path="planos" element={<Planos />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </TooltipProvider>
           </BrowserRouter>
         </AuthProvider>
       </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
