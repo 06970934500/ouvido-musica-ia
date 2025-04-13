@@ -12,16 +12,19 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolume] = useState(options.volume || 0.5);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Criar elemento de áudio ou atualizá-lo
+  // Create or update audio element
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
       
-      // Configurar event listeners
+      // Set up event listeners
       audioRef.current.addEventListener('loadedmetadata', () => {
         setDuration(audioRef.current?.duration || 0);
+        setIsLoading(false);
       });
       
       audioRef.current.addEventListener('timeupdate', () => {
@@ -32,10 +35,18 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
         setIsPlaying(false);
         if (options.onEnded) options.onEnded();
       });
+
+      audioRef.current.addEventListener('error', (e) => {
+        setError('Error loading audio file');
+        setIsLoading(false);
+        console.error('Audio error:', e);
+      });
     }
     
-    // Atualizar source
+    // Update source
     if (src) {
+      setIsLoading(true);
+      setError(null);
       audioRef.current.src = src;
       audioRef.current.load();
       
@@ -53,7 +64,7 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     };
   }, [src]);
 
-  // Atualizar volume
+  // Update volume
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -62,10 +73,14 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
 
   const play = () => {
     if (audioRef.current) {
+      setIsLoading(true);
       audioRef.current.play().then(() => {
         setIsPlaying(true);
+        setIsLoading(false);
       }).catch(error => {
-        console.error('Erro ao reproduzir áudio:', error);
+        console.error('Error playing audio:', error);
+        setError('Could not play audio');
+        setIsLoading(false);
       });
     }
   };
@@ -112,6 +127,8 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     duration,
     currentTime,
     volume,
+    isLoading,
+    error,
     play,
     pause,
     toggle,
