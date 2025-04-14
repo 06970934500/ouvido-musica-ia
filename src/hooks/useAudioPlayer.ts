@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseAudioPlayerOptions {
   onEnded?: () => void;
@@ -15,6 +16,36 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+  // Função para obter a URL pública do Supabase Storage
+  const getSupabaseUrl = async (path: string): Promise<string | null> => {
+    // Se já for uma URL completa, retorne-a
+    if (path.startsWith('http')) {
+      return path;
+    }
+    
+    // Se começar com "/audio/", assume que é um caminho para o bucket do Supabase
+    if (path.startsWith('/audio/')) {
+      const filePath = path.replace('/audio/', '');
+      try {
+        const { data, error } = await supabase.storage
+          .from('audio_exercises')
+          .getPublicUrl(filePath);
+
+        if (error) {
+          throw error;
+        }
+        return data.publicUrl;
+      } catch (err) {
+        console.error('Erro ao obter URL do Supabase:', err);
+        return null;
+      }
+    }
+    
+    // Se não for nenhum dos casos acima, retorne o próprio path
+    return path;
+  };
 
   // Create or update audio element
   useEffect(() => {
@@ -37,9 +68,9 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
       });
 
       audioRef.current.addEventListener('error', (e) => {
-        setError('Error loading audio file');
+        setError('Erro ao carregar arquivo de áudio');
         setIsLoading(false);
-        console.error('Audio error:', e);
+        console.error('Erro de áudio:', e);
       });
     }
     
@@ -47,12 +78,22 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     if (src) {
       setIsLoading(true);
       setError(null);
-      audioRef.current.src = src;
-      audioRef.current.load();
       
-      if (options.autoPlay) {
-        play();
-      }
+      // Obter URL do Supabase se necessário
+      getSupabaseUrl(src).then(url => {
+        if (url && audioRef.current) {
+          setAudioUrl(url);
+          audioRef.current.src = url;
+          audioRef.current.load();
+          
+          if (options.autoPlay) {
+            play();
+          }
+        } else {
+          setError('Não foi possível carregar o arquivo de áudio');
+          setIsLoading(false);
+        }
+      });
     }
     
     // Cleanup
@@ -78,8 +119,8 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
         setIsPlaying(true);
         setIsLoading(false);
       }).catch(error => {
-        console.error('Error playing audio:', error);
-        setError('Could not play audio');
+        console.error('Erro ao reproduzir áudio:', error);
+        setError('Não foi possível reproduzir o áudio');
         setIsLoading(false);
       });
     }
@@ -129,6 +170,7 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     volume,
     isLoading,
     error,
+    audioUrl,
     play,
     pause,
     toggle,

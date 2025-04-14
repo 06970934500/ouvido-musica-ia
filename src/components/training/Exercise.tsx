@@ -8,50 +8,19 @@ import { Music, Volume2, VolumeX, Check, X, RefreshCw, Loader2 } from 'lucide-re
 import { useExerciseProgress } from '@/hooks/useExerciseProgress';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
-// Temporary mapping for audio files - in a real app, these would come from a backend
-const AUDIO_SAMPLES = {
-  // Intervals
-  'Uníssono': '/audio/intervals/unison.mp3',
-  '2ª menor': '/audio/intervals/minor2nd.mp3',
-  '2ª maior': '/audio/intervals/major2nd.mp3',
-  '3ª menor': '/audio/intervals/minor3rd.mp3',
-  '3ª maior': '/audio/intervals/major3rd.mp3',
-  '4ª justa': '/audio/intervals/perfect4th.mp3',
-  '5ª justa': '/audio/intervals/perfect5th.mp3',
-  '6ª menor': '/audio/intervals/minor6th.mp3',
-  '6ª maior': '/audio/intervals/major6th.mp3',
-  '7ª menor': '/audio/intervals/minor7th.mp3',
-  '7ª maior': '/audio/intervals/major7th.mp3',
-  '8ª (oitava)': '/audio/intervals/octave.mp3',
-  
-  // Chords
-  'Maior': '/audio/chords/major.mp3',
-  'Menor': '/audio/chords/minor.mp3',
-  'Diminuto': '/audio/chords/diminished.mp3',
-  'Aumentado': '/audio/chords/augmented.mp3',
-  'Maior com 7ª': '/audio/chords/major7.mp3',
-  'Dominante (7)': '/audio/chords/dominant7.mp3',
-  'Menor com 7ª': '/audio/chords/minor7.mp3',
-  'Meio-diminuto': '/audio/chords/half-diminished.mp3',
-  
-  // Progressions
-  'I - IV - V': '/audio/progressions/I-IV-V.mp3',
-  'I - vi - IV - V': '/audio/progressions/I-vi-IV-V.mp3',
-  'I - V - vi - IV': '/audio/progressions/I-V-vi-IV.mp3',
-  'ii - V - I': '/audio/progressions/ii-V-I.mp3',
-  'I - vi - ii - V': '/audio/progressions/I-vi-ii-V.mp3',
-  'iii - vi - ii - V': '/audio/progressions/iii-vi-ii-V.mp3',
-  'I - IV - iii - vi - ii - V - I': '/audio/progressions/I-IV-iii-vi-ii-V-I.mp3',
-};
-
-// Fallback audio for demo purposes
-const FALLBACK_AUDIO = 'https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-922.mp3';
+// Interface para as opções do exercício
+interface ExerciseOption {
+  label: string;
+  audioPath?: string;
+  isCorrect?: boolean;
+}
 
 interface ExerciseProps {
   title: string;
   description: string;
-  options: string[];
+  options: string[] | ExerciseOption[];
   exerciseType: 'intervalos' | 'acordes' | 'progressoes' | 'melodias';
   difficulty: 'iniciante' | 'intermediario' | 'avancado';
   onComplete?: () => void;
@@ -71,7 +40,21 @@ const Exercise = ({
   const [currentExercise, setCurrentExercise] = useState(1);
   const [totalExercises, setTotalExercises] = useState(10);
   const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+  const [currentOptions, setCurrentOptions] = useState<ExerciseOption[]>([]);
   const { toast } = useToast();
+  
+  // Tratar opções no formato de string ou objeto
+  useEffect(() => {
+    // Converter as opções para o formato padronizado (objeto ExerciseOption)
+    const formattedOptions = options.map(opt => {
+      if (typeof opt === 'string') {
+        return { label: opt };
+      }
+      return opt as ExerciseOption;
+    });
+    
+    setCurrentOptions(formattedOptions);
+  }, [options]);
   
   const {
     correctAnswers,
@@ -95,24 +78,81 @@ const Exercise = ({
     }
   });
 
+  // Buscar exercícios do Supabase
+  const fetchExerciseContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('exercises')
+        .select('*')
+        .eq('type', exerciseType.replace('intervalos', 'interval').replace('acordes', 'chord').replace('progressoes', 'progression'))
+        .eq('difficulty', difficulty.replace('iniciante', 'beginner').replace('intermediario', 'intermediate').replace('avancado', 'advanced'))
+        .limit(1)
+        .single();
+      
+      if (error) {
+        console.error("Erro ao buscar exercício:", error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Erro na consulta:", error);
+      return null;
+    }
+  };
+
   // Generate new exercise
-  const generateNewExercise = () => {
+  const generateNewExercise = async () => {
     setSelectedOption(null);
     setIsCorrect(null);
     
-    // Select a random correct option
-    const newCorrectOption = options[Math.floor(Math.random() * options.length)];
+    // Tente buscar exercício da base de dados
+    const exerciseData = await fetchExerciseContent();
+    
+    if (exerciseData && exerciseData.content) {
+      // Usar dados do exercício se disponível
+      // Implementação futura
+    }
+    
+    // Selecionar uma opção aleatória como correta
+    const randomIndex = Math.floor(Math.random() * currentOptions.length);
+    const newCorrectOption = currentOptions[randomIndex].label;
     setCorrectOption(newCorrectOption);
     
-    // Get the audio URL for this option
-    const audioPath = AUDIO_SAMPLES[newCorrectOption as keyof typeof AUDIO_SAMPLES] || FALLBACK_AUDIO;
-    setAudioUrl(audioPath);
+    // Obter o caminho de áudio da opção correta ou usar fallback
+    const correctOptionData = currentOptions.find(opt => opt.label === newCorrectOption);
+    const audioPath = correctOptionData?.audioPath;
+    
+    // Se tiver um caminho de áudio específico, use-o
+    if (audioPath) {
+      setAudioUrl(audioPath);
+    } else {
+      // Caso contrário, use o áudio padrão baseado no tipo e na opção
+      let fallbackPath = '';
+      
+      switch (exerciseType) {
+        case 'intervalos':
+          fallbackPath = `/audio/intervals/${newCorrectOption.toLowerCase().replace(/\s+/g, '')}.mp3`;
+          break;
+        case 'acordes':
+          fallbackPath = `/audio/chords/${newCorrectOption.toLowerCase().replace(/\s+/g, '')}.mp3`;
+          break;
+        case 'progressoes':
+          fallbackPath = `/audio/progressions/${newCorrectOption.toLowerCase().replace(/\s+/g, '-')}.mp3`;
+          break;
+        default:
+          // Áudio de demonstração genérico
+          fallbackPath = 'https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-922.mp3';
+      }
+      
+      setAudioUrl(fallbackPath);
+    }
   };
 
   // Initialize on mount
   useEffect(() => {
     generateNewExercise();
-  }, []);
+  }, [currentOptions]);
 
   // Handle error
   useEffect(() => {
@@ -124,7 +164,7 @@ const Exercise = ({
       });
       
       // Use fallback audio
-      setAudioUrl(FALLBACK_AUDIO);
+      setAudioUrl('https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-922.mp3');
     }
   }, [error]);
 
@@ -214,25 +254,25 @@ const Exercise = ({
         
         {/* Options */}
         <div className="grid grid-cols-2 gap-3">
-          {options.map((option) => (
+          {currentOptions.map((option) => (
             <Button
-              key={option}
+              key={option.label}
               size="lg"
-              variant={selectedOption === option 
-                ? (option === correctOption ? "default" : "destructive") 
+              variant={selectedOption === option.label 
+                ? (option.label === correctOption ? "default" : "destructive") 
                 : "outline"}
               className={`h-16 ${
-                selectedOption === option && option === correctOption ? "bg-green-500 hover:bg-green-600" : ""
+                selectedOption === option.label && option.label === correctOption ? "bg-green-500 hover:bg-green-600" : ""
               }`}
-              onClick={() => checkAnswer(option)}
+              onClick={() => checkAnswer(option.label)}
               disabled={selectedOption !== null || isLoading}
             >
-              {selectedOption === option && (
-                option === correctOption 
+              {selectedOption === option.label && (
+                option.label === correctOption 
                 ? <Check className="h-5 w-5 mr-2" /> 
                 : <X className="h-5 w-5 mr-2" />
               )}
-              {option}
+              {option.label}
             </Button>
           ))}
         </div>
