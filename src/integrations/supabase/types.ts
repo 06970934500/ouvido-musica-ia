@@ -36,6 +36,39 @@ export type Database = {
         }
         Relationships: []
       }
+      exercise_progress: {
+        Row: {
+          completed_at: string
+          correct_answers: number
+          created_at: string
+          difficulty: string
+          exercise_type: string
+          id: string
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at: string
+          correct_answers?: number
+          created_at?: string
+          difficulty: string
+          exercise_type: string
+          id?: string
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          correct_answers?: number
+          created_at?: string
+          difficulty?: string
+          exercise_type?: string
+          id?: string
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           content: Json
@@ -190,6 +223,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_progress_summary: {
+        Row: {
+          id: string
+          last_activity_date: string
+          streak_days: number
+          total_exercises: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_activity_date?: string
+          streak_days?: number
+          total_exercises?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_activity_date?: string
+          streak_days?: number
+          total_exercises?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       user_subscriptions: {
         Row: {
