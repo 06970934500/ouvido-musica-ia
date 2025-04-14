@@ -12,12 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LogIn, User, Settings, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
-import { AuthDialog } from "./AuthDialog";
+import { Link, useNavigate } from "react-router-dom";
 
 export const UserMenu = () => {
   const { user, signOut } = useAuth();
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -27,27 +26,22 @@ export const UserMenu = () => {
     }
   };
 
+  const handleLogin = () => {
+    navigate("/auth");
+  };
+
   // Se o usuário não estiver logado, mostra o botão de login
   if (!user) {
     return (
-      <>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="hidden md:flex gap-1"
-          onClick={() => setShowAuthDialog(true)}
-        >
-          <LogIn className="h-4 w-4 mr-1" />
-          Entrar
-        </Button>
-
-        {showAuthDialog && (
-          <AuthDialog 
-            defaultTab="login" 
-            onSuccess={() => setShowAuthDialog(false)} 
-          />
-        )}
-      </>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="hidden md:flex gap-1"
+        onClick={handleLogin}
+      >
+        <LogIn className="h-4 w-4 mr-1" />
+        Entrar
+      </Button>
     );
   }
 

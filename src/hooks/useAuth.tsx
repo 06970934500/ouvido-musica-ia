@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -11,6 +12,7 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   isSupabaseConfigured: boolean;
 };
 
@@ -25,7 +27,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     try {
-      // Get initial session
+      // Configurar o listener de mudanças de autenticação PRIMEIRO
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
+      );
+
+      // DEPOIS verificar a sessão existente
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -35,15 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsSupabaseConfigured(false);
         setIsLoading(false);
       });
-
-      // Listen for auth changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setIsLoading(false);
-        }
-      );
 
       return () => {
         if (subscription && typeof subscription.unsubscribe === 'function') {
@@ -70,11 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         throw error;
       }
-      
-      toast({
-        title: "Login realizado com sucesso",
-        description: "Bem-vindo de volta!",
-      });
     } catch (error) {
       console.error("Erro ao fazer login:", error);
       throw error;
@@ -105,11 +102,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         throw error;
       }
-      
-      toast({
-        title: "Conta criada com sucesso",
-        description: "Verifique seu email para confirmar seu cadastro.",
-      });
     } catch (error) {
       console.error("Erro ao criar conta:", error);
       throw error;
@@ -140,11 +132,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         throw error;
       }
-      
-      toast({
-        title: "Sessão encerrada",
-        description: "Você saiu da sua conta.",
-      });
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       throw error;
@@ -177,13 +164,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         });
         throw error;
       }
-      
-      toast({
-        title: "Email enviado",
-        description: "Verifique sua caixa de entrada para redefinir sua senha.",
-      });
     } catch (error) {
       console.error("Erro ao solicitar redefinição de senha:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      if (!isSupabaseConfigured) {
+        toast({
+          title: "Erro de configuração",
+          description: "O Supabase não está configurado corretamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setIsLoading(true);
+      const { error } = await supabase.auth.updateUser({ password });
+      
+      if (error) {
+        toast({
+          title: "Erro ao atualizar senha",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar senha:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -199,6 +211,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signUp,
       signOut,
       resetPassword,
+      updatePassword,
       isSupabaseConfigured
     }}>
       {children}
