@@ -13,6 +13,7 @@ import Treinamento from "./pages/Treinamento";
 import Analise from "./pages/Analise";
 import Progresso from "./pages/Progresso";
 import Planos from "./pages/Planos";
+import Teoria from "./pages/Teoria";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -34,6 +35,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Home />} />
+                  <Route path="teoria" element={<Teoria />} />
                   <Route path="treinamento" element={<Treinamento />} />
                   <Route path="analise" element={<Analise />} />
                   <Route path="progresso" element={<ProtectedRoute><Progresso /></ProtectedRoute>} />

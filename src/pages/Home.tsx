@@ -21,9 +21,9 @@ const Home = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg">
-                <Link to="/treinamento">
-                  <PlayCircle className="mr-2 h-5 w-5" />
-                  Começar Treinamento
+                <Link to="/teoria">
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Aprender Teoria Musical
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
@@ -50,7 +50,16 @@ const Home = () => {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
+            <div className="flex flex-col items-center space-y-4 p-6 border rounded-lg card-hover">
+              <div className="p-3 rounded-full bg-music-100">
+                <BookOpen className="h-8 w-8 text-music-600" />
+              </div>
+              <h3 className="text-xl font-bold">Teoria Musical</h3>
+              <p className="text-center text-muted-foreground">
+                Aprenda os fundamentos teóricos necessários para o treinamento auditivo
+              </p>
+            </div>
             <div className="flex flex-col items-center space-y-4 p-6 border rounded-lg card-hover">
               <div className="p-3 rounded-full bg-music-100">
                 <Music className="h-8 w-8 text-music-600" />
@@ -91,23 +100,32 @@ const Home = () => {
                 Como funciona
               </h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-                Três passos simples para aprimorar suas habilidades auditivas
+                Quatro passos simples para aprimorar suas habilidades auditivas
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mt-12">
             <div className="flex flex-col items-center space-y-4 p-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-music-600 text-white font-bold text-xl">
                 1
               </div>
-              <h3 className="text-xl font-bold">Escolha seu exercício</h3>
+              <h3 className="text-xl font-bold">Aprenda a teoria</h3>
+              <p className="text-center text-muted-foreground">
+                Entenda os conceitos fundamentais de intervalos, acordes e progressões
+              </p>
+            </div>
+            <div className="flex flex-col items-center space-y-4 p-6">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-music-600 text-white font-bold text-xl">
+                2
+              </div>
+              <h3 className="text-xl font-bold">Escolha seus exercícios</h3>
               <p className="text-center text-muted-foreground">
                 Selecione entre treinar intervalos, acordes ou progressões harmônicas
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 p-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-music-600 text-white font-bold text-xl">
-                2
+                3
               </div>
               <h3 className="text-xl font-bold">Pratique diariamente</h3>
               <p className="text-center text-muted-foreground">
@@ -116,7 +134,7 @@ const Home = () => {
             </div>
             <div className="flex flex-col items-center space-y-4 p-6">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-music-600 text-white font-bold text-xl">
-                3
+                4
               </div>
               <h3 className="text-xl font-bold">Acompanhe seu progresso</h3>
               <p className="text-center text-muted-foreground">
@@ -141,8 +159,8 @@ const Home = () => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg">
-                <Link to="/treinamento">
-                  <PlayCircle className="mr-2 h-5 w-5" />
+                <Link to="/teoria">
+                  <BookOpen className="mr-2 h-5 w-5" />
                   Começar Agora
                 </Link>
               </Button>

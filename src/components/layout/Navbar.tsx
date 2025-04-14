@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Music } from "lucide-react";
+import { Music, BookOpen } from "lucide-react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import ThemeToggle from "./ThemeToggle";
 
@@ -28,6 +28,19 @@ const Navbar = () => {
         </Link>
 
         <nav className="flex items-center gap-4 md:gap-6">
+          <Link
+            to="/teoria"
+            className={`text-sm font-medium transition-colors ${
+              isActive("/teoria")
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <span className="flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Teoria</span>
+            </span>
+          </Link>
           <Link
             to="/treinamento"
             className={`text-sm font-medium transition-colors ${
