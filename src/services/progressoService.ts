@@ -1,13 +1,23 @@
 
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { ExerciseProgress, UserProgress, ExerciseAnalytics, WeeklyProgress } from "@/types/progresso";
 
 // Salvar o progresso de um exercício
 export const saveExerciseProgress = async (progress: Omit<ExerciseProgress, 'id' | 'created_at'>) => {
   try {
+    // Converter para o formato correto
+    const dataToInsert = {
+      user_id: progress.user_id,
+      exercise_type: progress.exercise_type,
+      difficulty: progress.difficulty,
+      correct_answers: progress.correct_answers,
+      total_questions: progress.total_questions,
+      completed_at: progress.completed_at.toISOString()
+    };
+
     const { data, error } = await supabase
       .from('exercise_progress')
-      .insert(progress)
+      .insert(dataToInsert)
       .select();
     
     if (error) throw error;
@@ -27,7 +37,7 @@ const updateUserProgress = async (userId: string) => {
   try {
     // Verificar se o usuário já tem um registro de progresso
     const { data: existingProgress, error: fetchError } = await supabase
-      .from('user_progress')
+      .from('user_progress_summary')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -51,11 +61,11 @@ const updateUserProgress = async (userId: string) => {
       
       // Atualizar o progresso existente
       const { error: updateError } = await supabase
-        .from('user_progress')
+        .from('user_progress_summary')
         .update({
           streak_days: streakDays,
           total_exercises: existingProgress.total_exercises + 1,
-          last_activity_date: today
+          last_activity_date: today.toISOString()
         })
         .eq('user_id', userId);
       
@@ -63,12 +73,12 @@ const updateUserProgress = async (userId: string) => {
     } else {
       // Criar um novo registro de progresso
       const { error: insertError } = await supabase
-        .from('user_progress')
+        .from('user_progress_summary')
         .insert({
           user_id: userId,
           streak_days: 1,
           total_exercises: 1,
-          last_activity_date: today
+          last_activity_date: today.toISOString()
         });
       
       if (insertError) throw insertError;
@@ -114,12 +124,15 @@ export const getWeeklyProgress = async (userId: string): Promise<WeeklyProgress[
     
     // Agrupar os dados por dia
     if (data) {
-      data.forEach(entry => {
+      data.forEach((entry: any) => {
         const date = new Date(entry.completed_at);
         const dayIndex = date.getDay();
+        const dayResult = result.find((r, idx) => idx === dayIndex);
         
-        result[dayIndex].acertos += entry.correct_answers;
-        result[dayIndex].exercicios += entry.total_questions;
+        if (dayResult) {
+          dayResult.acertos += entry.correct_answers;
+          dayResult.exercicios += entry.total_questions;
+        }
       });
     }
     
@@ -166,19 +179,16 @@ export const getProgressByCategory = async (userId: string): Promise<ExerciseAna
       const totalByType: Record<string, Record<string, { correct: number, total: number }>> = {};
       
       // Inicializar o objeto
-      categories.forEach((_, index) => {
-        const type = Object.keys(typeToIndex).find(key => typeToIndex[key] === index);
-        if (type) {
-          totalByType[type] = {
-            'iniciante': { correct: 0, total: 0 },
-            'intermediario': { correct: 0, total: 0 },
-            'avancado': { correct: 0, total: 0 }
-          };
-        }
+      Object.keys(typeToIndex).forEach(type => {
+        totalByType[type] = {
+          'iniciante': { correct: 0, total: 0 },
+          'intermediario': { correct: 0, total: 0 },
+          'avancado': { correct: 0, total: 0 }
+        };
       });
       
       // Somar os resultados
-      data.forEach(entry => {
+      data.forEach((entry: any) => {
         if (totalByType[entry.exercise_type]) {
           totalByType[entry.exercise_type][entry.difficulty].correct += entry.correct_answers;
           totalByType[entry.exercise_type][entry.difficulty].total += entry.total_questions;
@@ -193,8 +203,13 @@ export const getProgressByCategory = async (userId: string): Promise<ExerciseAna
             const { correct, total } = totalByType[type][difficulty];
             const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
             
-            // @ts-ignore - dificuldade como chave do objeto
-            result[categoryIndex][difficulty] = percentage;
+            if (difficulty === 'iniciante') {
+              result[categoryIndex].iniciante = percentage;
+            } else if (difficulty === 'intermediario') {
+              result[categoryIndex].intermediario = percentage;
+            } else if (difficulty === 'avancado') {
+              result[categoryIndex].avancado = percentage;
+            }
           });
         }
       });
@@ -212,7 +227,7 @@ export const getUserStats = async (userId: string) => {
   try {
     // Obter progresso geral do usuário
     const { data: userProgress, error: userError } = await supabase
-      .from('user_progress')
+      .from('user_progress_summary')
       .select('*')
       .eq('user_id', userId)
       .single();
@@ -232,7 +247,7 @@ export const getUserStats = async (userId: string) => {
     let totalQuestions = 0;
     
     if (exercises) {
-      exercises.forEach(ex => {
+      exercises.forEach((ex: any) => {
         totalCorrect += ex.correct_answers;
         totalQuestions += ex.total_questions;
       });
@@ -240,7 +255,7 @@ export const getUserStats = async (userId: string) => {
     
     // Obter músicas analisadas
     const { count: musicCount, error: musicError } = await supabase
-      .from('analyzed_songs')
+      .from('music_analyses')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId);
       

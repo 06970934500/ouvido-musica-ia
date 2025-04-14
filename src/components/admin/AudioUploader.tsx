@@ -67,15 +67,14 @@ export default function AudioUploader({
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setProgress(percent);
-          }
         });
       
       if (error) {
         throw error;
       }
+      
+      // Atualizar o progresso após o upload
+      setProgress(100);
       
       // Obter a URL pública do arquivo
       const { data: urlData } = await supabase.storage

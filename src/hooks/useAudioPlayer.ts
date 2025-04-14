@@ -29,13 +29,10 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     if (path.startsWith('/audio/')) {
       const filePath = path.replace('/audio/', '');
       try {
-        const { data, error } = await supabase.storage
+        const { data } = await supabase.storage
           .from('audio_exercises')
           .getPublicUrl(filePath);
 
-        if (error) {
-          throw error;
-        }
         return data.publicUrl;
       } catch (err) {
         console.error('Erro ao obter URL do Supabase:', err);
