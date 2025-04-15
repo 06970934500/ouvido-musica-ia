@@ -22,6 +22,7 @@ const Planos = () => {
   const [searchParams] = useSearchParams();
   const [isLoadingCheckout, setIsLoadingCheckout] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [isLoadingTrial, setIsLoadingTrial] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
@@ -110,15 +111,22 @@ const Planos = () => {
   };
 
   // Function to handle checkout
-  const handleCheckout = async () => {
+  const handleCheckout = async (withTrial = false) => {
     if (!user) {
       setIsAuthDialogOpen(true);
       return;
     }
 
     try {
-      setIsLoadingCheckout(true);
-      const { data, error } = await supabase.functions.invoke('create-checkout');
+      if (withTrial) {
+        setIsLoadingTrial(true);
+      } else {
+        setIsLoadingCheckout(true);
+      }
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { trial: withTrial }
+      });
       
       if (error) {
         console.error("Error creating checkout session:", error);
@@ -141,6 +149,7 @@ const Planos = () => {
         variant: "destructive",
       });
     } finally {
+      setIsLoadingTrial(false);
       setIsLoadingCheckout(false);
     }
   };
@@ -346,13 +355,17 @@ const Planos = () => {
               <>
                 <Button 
                   className="w-full"
-                  onClick={handleCheckout}
-                  disabled={isLoadingCheckout}
+                  onClick={() => handleCheckout(false)}
+                  disabled={isLoadingCheckout || isLoadingTrial}
                 >
                   {isLoadingCheckout ? "Carregando..." : "Assinar Agora"}
                 </Button>
-                <Button variant="link">
-                  Faça um teste grátis de 7 dias
+                <Button 
+                  variant="link" 
+                  onClick={() => handleCheckout(true)}
+                  disabled={isLoadingCheckout || isLoadingTrial}
+                >
+                  {isLoadingTrial ? "Carregando..." : "Faça um teste grátis de 7 dias"}
                 </Button>
               </>
             )}
@@ -405,7 +418,7 @@ const Planos = () => {
         defaultTab="login"
         open={isAuthDialogOpen}
         onOpenChange={setIsAuthDialogOpen}
-        onSuccess={handleCheckout}
+        onSuccess={() => handleCheckout(false)}
       />
     </div>
   );

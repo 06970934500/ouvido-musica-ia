@@ -56,6 +56,10 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
+    // Parse request body to get trial flag
+    const { trial = false } = await req.json().catch(() => ({}));
+    logStep("Request parameters", { trial });
+
     // Create subscription checkout session using the provided price ID
     const origin = req.headers.get("origin") || "http://localhost:5173";
     const session = await stripe.checkout.sessions.create({
@@ -68,11 +72,16 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: trial ? { trial_period_days: 7 } : undefined,
       success_url: `${origin}/planos?success=true`,
       cancel_url: `${origin}/planos?canceled=true`,
     });
 
-    logStep("Created checkout session", { sessionId: session.id, url: session.url });
+    logStep("Created checkout session", { 
+      sessionId: session.id, 
+      url: session.url, 
+      hasTrial: !!trial 
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
