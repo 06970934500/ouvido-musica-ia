@@ -56,19 +56,14 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    // Create subscription checkout session
+    // Create subscription checkout session using the provided price ID
     const origin = req.headers.get("origin") || "http://localhost:5173";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price_data: {
-            currency: "brl",
-            product_data: { name: "Plano Premium" },
-            unit_amount: 2990, // R$29.90 in centavos
-            recurring: { interval: "month" },
-          },
+          price: "price_1RE8erRCOlJG8tersUGWE3kn", // Using the provided price ID
           quantity: 1,
         },
       ],

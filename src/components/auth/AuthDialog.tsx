@@ -19,18 +19,26 @@ type AuthDialogProps = {
   trigger?: React.ReactNode;
   defaultTab?: "login" | "register";
   onSuccess?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export const AuthDialog = ({
   trigger,
   defaultTab = "login",
   onSuccess,
+  open,
+  onOpenChange,
 }: AuthDialogProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpenInternal, setIsOpenInternal] = useState(false);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const { signIn, signUp, resetPassword, isLoading } = useAuth();
+
+  // Use controlled open state if provided, otherwise use internal state
+  const isOpen = open !== undefined ? open : isOpenInternal;
+  const setIsOpen = onOpenChange || setIsOpenInternal;
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
