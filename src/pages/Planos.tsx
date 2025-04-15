@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, X, AlertCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AuthDialog } from "@/components/auth/AuthDialog";
@@ -403,6 +403,8 @@ const Planos = () => {
       {/* Auth Dialog for non-authenticated users */}
       <AuthDialog 
         defaultTab="login"
+        open={isAuthDialogOpen}
+        onOpenChange={setIsAuthDialogOpen}
         onSuccess={handleCheckout}
       />
     </div>
