@@ -1,9 +1,27 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, BookText, Music, HeadphonesIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Images } from 'lucide-react';
 
 const Teoria = () => {
+  const musicConcepts = [
+    { 
+      name: 'Intervalos', 
+      placeholderImage: '/placeholder.svg',
+      description: 'Distância entre duas notas musicais'
+    },
+    { 
+      name: 'Escalas', 
+      placeholderImage: '/placeholder.svg', 
+      description: 'Sequência de notas em ordem ascendente ou descendente'
+    },
+    { 
+      name: 'Acordes', 
+      placeholderImage: '/placeholder.svg',
+      description: 'Combinação de três ou mais notas tocadas simultaneamente'
+    }
+  ];
+
   return (
     <div className="container py-12">
       <div className="flex flex-col items-center space-y-4 text-center mb-8">
@@ -12,6 +30,29 @@ const Teoria = () => {
           Fundamentos teóricos essenciais para desenvolver seu ouvido musical
         </p>
       </div>
+
+      <section className="mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {musicConcepts.map((concept) => (
+            <Card key={concept.name} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-center justify-center mb-4">
+                  <Images className="h-12 w-12 text-music-600" />
+                </div>
+                <CardTitle>{concept.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-center">
+                <img 
+                  src={concept.placeholderImage} 
+                  alt={concept.name} 
+                  className="mx-auto mb-4 rounded-lg shadow-sm max-h-48"
+                />
+                <p className="text-muted-foreground">{concept.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       <Tabs defaultValue="intervalos" className="w-full">
         <div className="flex justify-center mb-8">
