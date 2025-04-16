@@ -63,8 +63,7 @@ const MusicConceptCard = ({ name, placeholderImage, description }: MusicConceptC
           <AudioPlayer 
             audioPath={getConceptAudio(name)}
             size="sm"
-            showLabel={true}
-            label="Exemplo sonoro"
+            showLabel={false}
           />
         </div>
       </CardContent>

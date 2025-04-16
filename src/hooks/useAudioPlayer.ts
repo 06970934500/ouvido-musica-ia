@@ -18,29 +18,20 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
-  // Função para obter a URL pública do Supabase Storage
+  // Function to get public URL from Supabase Storage
   const getSupabaseUrl = async (path: string): Promise<string | null> => {
-    // Se já for uma URL completa, retorne-a
+    // If already a full URL, return it
     if (path.startsWith('http')) {
       return path;
     }
     
-    // Se começar com "/audio/", assume que é um caminho para o bucket do Supabase
+    // If path starts with "/audio/", assume it's a path to a public file
     if (path.startsWith('/audio/')) {
-      const filePath = path.replace('/audio/', '');
-      try {
-        const { data } = await supabase.storage
-          .from('audio_exercises')
-          .getPublicUrl(filePath);
-
-        return data.publicUrl;
-      } catch (err) {
-        console.error('Erro ao obter URL do Supabase:', err);
-        return null;
-      }
+      // Just use the path directly since these are public files
+      return path;
     }
     
-    // Se não for nenhum dos casos acima, retorne o próprio path
+    // If none of the above, return the path itself
     return path;
   };
 
@@ -65,9 +56,9 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
       });
 
       audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error event:', e);
         setError('Erro ao carregar arquivo de áudio');
         setIsLoading(false);
-        console.error('Erro de áudio:', e);
       });
     }
     
@@ -75,18 +66,21 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
     if (src) {
       setIsLoading(true);
       setError(null);
+      console.log('Loading audio from path:', src);
       
-      // Obter URL do Supabase se necessário
+      // Get URL from Supabase if needed
       getSupabaseUrl(src).then(url => {
         if (url && audioRef.current) {
           setAudioUrl(url);
           audioRef.current.src = url;
           audioRef.current.load();
+          console.log('Audio loaded with URL:', url);
           
           if (options.autoPlay) {
             play();
           }
         } else {
+          console.error('Could not get audio URL for path:', src);
           setError('Não foi possível carregar o arquivo de áudio');
           setIsLoading(false);
         }
@@ -112,11 +106,13 @@ export const useAudioPlayer = (src?: string, options: UseAudioPlayerOptions = {}
   const play = () => {
     if (audioRef.current) {
       setIsLoading(true);
+      console.log('Attempting to play audio');
       audioRef.current.play().then(() => {
         setIsPlaying(true);
         setIsLoading(false);
+        console.log('Audio playing successfully');
       }).catch(error => {
-        console.error('Erro ao reproduzir áudio:', error);
+        console.error('Error playing audio:', error);
         setError('Não foi possível reproduzir o áudio');
         setIsLoading(false);
       });
