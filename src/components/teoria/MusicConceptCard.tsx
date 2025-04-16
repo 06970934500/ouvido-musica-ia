@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Images } from 'lucide-react';
+import { Images, Volume2 } from 'lucide-react';
+import AudioPlayer from "@/components/training/AudioPlayer";
 
 interface MusicConceptCardProps {
   name: string;
@@ -23,6 +24,20 @@ const MusicConceptCard = ({ name, placeholderImage, description }: MusicConceptC
     }
   };
 
+  // Map concept names to example audio paths
+  const getConceptAudio = (conceptName: string) => {
+    switch(conceptName) {
+      case 'Intervalos':
+        return "/audio/intervals/5ªjusta.mp3";
+      case 'Escalas':
+        return "/audio/demo/example.mp3";
+      case 'Acordes':
+        return "/audio/chords/maior.mp3";
+      default:
+        return "";
+    }
+  };
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
@@ -37,7 +52,21 @@ const MusicConceptCard = ({ name, placeholderImage, description }: MusicConceptC
           alt={name} 
           className="mx-auto mb-4 rounded-lg shadow-sm max-h-48"
         />
-        <p className="text-muted-foreground">{description}</p>
+        <p className="text-muted-foreground mb-4">{description}</p>
+        
+        {/* Audio example section */}
+        <div className="flex flex-col items-center mt-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Volume2 className="h-4 w-4" />
+            <span>Escutar exemplo:</span>
+          </div>
+          <AudioPlayer 
+            audioPath={getConceptAudio(name)}
+            size="sm"
+            showLabel={true}
+            label="Exemplo sonoro"
+          />
+        </div>
       </CardContent>
     </Card>
   );
