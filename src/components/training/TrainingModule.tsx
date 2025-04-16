@@ -6,6 +6,7 @@ import { Check, Upload } from 'lucide-react';
 import Exercise from './Exercise';
 import { useAuth } from '@/hooks/useAuth';
 import AudioUploader from '../admin/AudioUploader';
+import AudioPlayer from './AudioPlayer';
 
 interface TrainingModuleProps {
   title: string;
@@ -24,14 +25,28 @@ const TrainingModule = ({
 }: TrainingModuleProps) => {
   const [showExercise, setShowExercise] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
+  const [playingItem, setPlayingItem] = useState<string | null>(null);
   const { user } = useAuth();
   
-  // Verificação simples para modo admin (na prática, você teria um controle mais rigoroso)
-  const isAdmin = user?.email === 'admin@example.com'; // Substitua por sua lógica real de verificação de admin
+  // Verificação simples para modo admin
+  const isAdmin = user?.email === 'admin@example.com';
 
   const handleUploadComplete = (audioPath: string) => {
     console.log(`Áudio carregado para ${exerciseType}/${difficulty}: ${audioPath}`);
-    // Aqui você poderia atualizar a lista de itens com o novo áudio, etc.
+  };
+
+  // Função para obter o caminho de áudio baseado no item
+  const getAudioPath = (item: string) => {
+    switch (exerciseType) {
+      case 'intervalos':
+        return `/audio/intervals/${item.toLowerCase().replace(/\s+/g, '').replace(/[ªº]/g, '')}.mp3`;
+      case 'acordes':
+        return `/audio/chords/${item.toLowerCase().replace(/\s+/g, '').replace(/[ªº]/g, '')}.mp3`;
+      case 'progressoes':
+        return `/audio/progressions/${item.toLowerCase().replace(/\s+/g, '-').replace(/[–]/g, '-')}.mp3`;
+      default:
+        return '/audio/demo/example.mp3';
+    }
   };
 
   return showExercise ? (
@@ -50,11 +65,17 @@ const TrainingModule = ({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {items.map((item, index) => (
-            <li key={index} className="flex items-center">
-              <Check className="h-4 w-4 mr-2 text-green-500" />
-              <span>{item}</span>
+            <li key={index} className="flex items-center justify-between border-b pb-2 last:border-0">
+              <div className="flex items-center">
+                <Check className="h-4 w-4 mr-2 text-green-500" />
+                <span>{item}</span>
+              </div>
+              <AudioPlayer 
+                audioPath={getAudioPath(item)}
+                size="sm"
+              />
             </li>
           ))}
         </ul>

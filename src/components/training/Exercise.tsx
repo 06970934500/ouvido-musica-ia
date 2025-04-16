@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Music, Volume2, VolumeX, Check, X, RefreshCw, Loader2 } from 'lucide-react';
+import { Music, Check, X, RefreshCw } from 'lucide-react';
 import { useExerciseProgress } from '@/hooks/useExerciseProgress';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import AudioPlayer from './AudioPlayer';
 
 // Interface para as opções do exercício
 interface ExerciseOption {
@@ -39,7 +39,7 @@ const Exercise = ({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [currentExercise, setCurrentExercise] = useState(1);
   const [totalExercises, setTotalExercises] = useState(10);
-  const [audioUrl, setAudioUrl] = useState<string | undefined>(undefined);
+  const [audioPath, setAudioPath] = useState<string | undefined>(undefined);
   const [currentOptions, setCurrentOptions] = useState<ExerciseOption[]>([]);
   const { toast } = useToast();
   
@@ -65,19 +65,6 @@ const Exercise = ({
     accuracyRate
   } = useExerciseProgress(exerciseType, difficulty);
 
-  const {
-    isPlaying,
-    isLoading,
-    error,
-    play,
-    stop
-  } = useAudioPlayer(audioUrl, {
-    volume: 0.8,
-    onEnded: () => {
-      // Audio completed playing
-    }
-  });
-
   // Buscar exercícios do Supabase
   const fetchExerciseContent = async () => {
     try {
@@ -87,7 +74,7 @@ const Exercise = ({
         .eq('type', exerciseType.replace('intervalos', 'interval').replace('acordes', 'chord').replace('progressoes', 'progression'))
         .eq('difficulty', difficulty.replace('iniciante', 'beginner').replace('intermediario', 'intermediate').replace('avancado', 'advanced'))
         .limit(1)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Erro ao buscar exercício:", error);
@@ -125,27 +112,27 @@ const Exercise = ({
     
     // Se tiver um caminho de áudio específico, use-o
     if (audioPath) {
-      setAudioUrl(audioPath);
+      setAudioPath(audioPath);
     } else {
       // Caso contrário, use o áudio padrão baseado no tipo e na opção
       let fallbackPath = '';
       
       switch (exerciseType) {
         case 'intervalos':
-          fallbackPath = `/audio/intervals/${newCorrectOption.toLowerCase().replace(/\s+/g, '')}.mp3`;
+          fallbackPath = `/audio/intervals/${newCorrectOption.toLowerCase().replace(/\s+/g, '').replace(/[ªº]/g, '')}.mp3`;
           break;
         case 'acordes':
-          fallbackPath = `/audio/chords/${newCorrectOption.toLowerCase().replace(/\s+/g, '')}.mp3`;
+          fallbackPath = `/audio/chords/${newCorrectOption.toLowerCase().replace(/\s+/g, '').replace(/[ªº]/g, '')}.mp3`;
           break;
         case 'progressoes':
-          fallbackPath = `/audio/progressions/${newCorrectOption.toLowerCase().replace(/\s+/g, '-')}.mp3`;
+          fallbackPath = `/audio/progressions/${newCorrectOption.toLowerCase().replace(/\s+/g, '-').replace(/[–]/g, '-')}.mp3`;
           break;
         default:
           // Áudio de demonstração genérico
-          fallbackPath = 'https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-922.mp3';
+          fallbackPath = '/audio/demo/example.mp3';
       }
       
-      setAudioUrl(fallbackPath);
+      setAudioPath(fallbackPath);
     }
   };
 
@@ -153,20 +140,6 @@ const Exercise = ({
   useEffect(() => {
     generateNewExercise();
   }, [currentOptions]);
-
-  // Handle error
-  useEffect(() => {
-    if (error) {
-      toast({
-        title: "Erro ao carregar áudio",
-        description: "Usando um áudio de demonstração",
-        variant: "destructive"
-      });
-      
-      // Use fallback audio
-      setAudioUrl('https://assets.mixkit.co/sfx/preview/mixkit-simple-countdown-922.mp3');
-    }
-  }, [error]);
 
   // Check answer
   const checkAnswer = (option: string) => {
@@ -177,9 +150,6 @@ const Exercise = ({
     const correct = option === correctOption;
     setIsCorrect(correct);
     recordAnswer(correct);
-    
-    // Stop audio
-    stop();
     
     // If completed all exercises, send result
     if (currentExercise >= totalExercises) {
@@ -198,15 +168,6 @@ const Exercise = ({
       // Restart exercises
       setCurrentExercise(1);
       generateNewExercise();
-    }
-  };
-
-  // Play audio
-  const handlePlayAudio = () => {
-    if (isPlaying) {
-      stop();
-    } else {
-      play();
     }
   };
 
@@ -236,20 +197,10 @@ const Exercise = ({
         
         {/* Audio controls */}
         <div className="flex justify-center">
-          <Button 
-            size="lg" 
-            className="rounded-full h-20 w-20"
-            onClick={handlePlayAudio}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="h-10 w-10 animate-spin" />
-            ) : isPlaying ? (
-              <VolumeX className="h-10 w-10" />
-            ) : (
-              <Volume2 className="h-10 w-10" />
-            )}
-          </Button>
+          <AudioPlayer 
+            audioPath={audioPath || ''}
+            size="lg"
+          />
         </div>
         
         {/* Options */}
@@ -265,7 +216,7 @@ const Exercise = ({
                 selectedOption === option.label && option.label === correctOption ? "bg-green-500 hover:bg-green-600" : ""
               }`}
               onClick={() => checkAnswer(option.label)}
-              disabled={selectedOption !== null || isLoading}
+              disabled={selectedOption !== null || loading}
             >
               {selectedOption === option.label && (
                 option.label === correctOption 
@@ -300,8 +251,12 @@ const Exercise = ({
       <CardFooter className="flex justify-between">
         <Button 
           variant="outline" 
-          onClick={handlePlayAudio}
-          disabled={isLoading}
+          onClick={() => {
+            if (audioPath) {
+              // Usando o componente AudioPlayer
+              // Esta é uma ação para ouvir novamente apenas
+            }
+          }}
         >
           <Music className="h-4 w-4 mr-2" />
           Ouvir novamente

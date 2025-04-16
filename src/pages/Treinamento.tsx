@@ -9,11 +9,11 @@ const Treinamento = () => {
 
   // Dados para os exercícios
   const intervalosBasicos = [
-    "Uníssono", "2ª maior", "3ª maior", "4ª justa", "5ª justa", "8ª (oitava)"
+    "Uníssono", "2ª Maior", "3ª Maior", "4ª Justa", "5ª Justa", "8ª"
   ];
   
   const intervalosIntermediarios = [
-    "2ª menor", "3ª menor", "6ª maior", "7ª maior", "6ª menor", "7ª menor"
+    "2ª Menor", "3ª Menor", "6ª Maior", "7ª Maior", "6ª Menor", "7ª Menor"
   ];
   
   const triadesBasicas = [
@@ -25,11 +25,11 @@ const Treinamento = () => {
   ];
   
   const progressoesBasicas = [
-    "I - IV - V", "I - vi - IV - V", "I - V - vi - IV", "ii - V - I"
+    "I-IV-V", "I-vi-IV-V", "I-V-vi-IV", "ii-V-I"
   ];
   
   const progressoesJazz = [
-    "ii - V - I", "I - vi - ii - V", "iii - vi - ii - V", "I - IV - iii - vi - ii - V - I"
+    "ii-V-I", "I-vi-ii-V", "iii-vi-ii-V", "I-IV-iii-vi-ii-V-I"
   ];
 
   return (
