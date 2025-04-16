@@ -22,11 +22,11 @@ export const usePlanosLogic = () => {
     subscription_end: null,
   });
 
-  // Determine alert status from URL parameters
+  // Type "success" | "canceled" | null for alertStatus
   const alertStatus = searchParams.get("success") === "true" 
-    ? "success" 
+    ? "success" as const
     : searchParams.get("canceled") === "true" 
-      ? "canceled" 
+      ? "canceled" as const
       : null;
 
   // Effect to handle URL parameters
