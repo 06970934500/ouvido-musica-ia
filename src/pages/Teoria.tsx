@@ -12,12 +12,12 @@ const Teoria = () => {
     { 
       name: 'Intervalos', 
       placeholderImage: '/placeholder.svg',
-      description: 'Distância entre duas notas musicais'
+      description: 'Distância entre duas notas musicais e seu reconhecimento auditivo'
     },
     { 
       name: 'Escalas', 
       placeholderImage: '/placeholder.svg', 
-      description: 'Sequência de notas em ordem ascendente ou descendente'
+      description: 'Sequências de notas que formam a base da melodia e harmonia'
     },
     { 
       name: 'Acordes', 
