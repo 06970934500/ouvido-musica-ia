@@ -1,3 +1,4 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, BookText, Music, HeadphonesIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +78,16 @@ const Teoria = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6">
+                  <img 
+                    src="/lovable-uploads/81b7b9fa-54b7-412c-9092-bcf0c52a42c6.png" 
+                    alt="Tabela de intervalos musicais" 
+                    className="w-full rounded-lg shadow-md mb-4"
+                  />
+                  <p className="text-sm text-center text-muted-foreground mb-4">
+                    Tabela de intervalos musicais e suas distâncias em tons
+                  </p>
+                </div>
                 <p className="mb-4">
                   Intervalos musicais são a distância entre duas notas. São a base para entender 
                   melodias, acordes e progressões harmônicas.
@@ -137,6 +148,16 @@ const Teoria = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6">
+                  <img 
+                    src="/lovable-uploads/52a2c01c-5c0a-421f-996e-5b53368e9b07.png" 
+                    alt="Diagrama de acorde C maior" 
+                    className="w-3/4 mx-auto rounded-lg shadow-md mb-4"
+                  />
+                  <p className="text-sm text-center text-muted-foreground mb-4">
+                    Diagrama do acorde C maior (Dó maior) no violão
+                  </p>
+                </div>
                 <p className="mb-4">
                   Acordes são grupos de três ou mais notas tocadas simultaneamente que criam uma harmonia. 
                 </p>
@@ -201,6 +222,16 @@ const Teoria = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6">
+                  <img 
+                    src="/lovable-uploads/9bdc3702-7be6-4236-8de3-894bf3e0cc02.png" 
+                    alt="Tabela de escalas maiores" 
+                    className="w-full rounded-lg shadow-md mb-4"
+                  />
+                  <p className="text-sm text-center text-muted-foreground mb-4">
+                    Escalas maiores e seus intervalos
+                  </p>
+                </div>
                 <p className="mb-4">
                   As escalas são sequências organizadas de notas que formam a base da melodia e da harmonia.
                 </p>
